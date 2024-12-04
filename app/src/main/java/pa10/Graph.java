@@ -3,33 +3,126 @@
  */
 
 package pa10;
+import java.util.ArrayList;        // For Stack
+import java.util.LinkedList;         // For List
+import java.util.List;    // For ArrayList, used in adjacency lists
+import java.util.Queue;        // For Queue interface
+import java.util.Stack;   // For LinkedList, used to implement the queue
+
 /** 
  * Graph interface for a directed graph with vertices numbered from 0 to n-1.
  */
-interface Graph {
+public class Graph {
+    private final int n; // Number of vertices
+    private final List<List<Integer>> adjacencyList; // Adjacency list representation of the graph
 
     /**
-     *  Add an edge between two vertices.
-     *  @param v vertex 1 (0-indexed)
-     *  @param w vertex 2 (0-indexed)
-     * 
+     * Constructor to initialize a graph with n vertices.
+     *
+     * @param n number of vertices
      */
-    public void addEdge(int v, int w);
+    public Graph(int n) {
+        this.n = n;
+        adjacencyList = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            adjacencyList.add(new ArrayList<>());
+        }
+    }
 
     /**
-     * Topological sort of the graph, using DFS.
-     * 
+     * Add an edge between two vertices.
+     *
+     * @param v vertex 1 (0-indexed)
+     * @param w vertex 2 (0-indexed)
+     */
+    public void addEdge(int v, int w) {
+        adjacencyList.get(v).add(w);
+    }
+
+    /**
+     * Topological sort of the graph using DFS.
+     *
      * @return an array of vertices in topological order
-     * 
      */
-    public String topologicalSort();
+    public List<Integer> topologicalSort() {
+        Stack<Integer> sortedStack = new Stack<>();
+        boolean[] visited = new boolean[n];
+
+        for (int i = 0; i < n; i++) {
+            if (!visited[i]) {
+                dfs(i, visited, sortedStack);
+            }
+        }
+
+        List<Integer> sortedOrder = new ArrayList<>();
+        while (!sortedStack.isEmpty()) {
+            sortedOrder.add(sortedStack.pop());
+        }
+
+        return sortedOrder;
+    }
 
     /**
-     * Topological sort of the graph, using Kahn's algorithm.
-     * 
-     * @return an array of vertices in topological order
-     * 
+     * Helper method for DFS traversal.
+     *
+     * @param vertex current vertex
+     * @param visited visited array
+     * @param stack stack to store the topological order
      */
-    public String kahn();
+    private void dfs(int vertex, boolean[] visited, Stack<Integer> stack) {
+        visited[vertex] = true;
+
+        for (int neighbor : adjacencyList.get(vertex)) {
+            if (!visited[neighbor]) {
+                dfs(neighbor, visited, stack);
+            }
+        }
+
+        stack.push(vertex);
+    }
+
+    /**
+     * Topological sort of the graph using Kahn's algorithm.
+     *
+     * @return a list of vertices in topological order, or a message if the graph has a cycle
+     */
+    public String kahn() {
+        int[] inDegree = new int[n];
+        for (int i = 0; i < n; i++) {
+            for (int neighbor : adjacencyList.get(i)) {
+                inDegree[neighbor]++;
+            }
+        }
+
+        Queue<Integer> queue = new LinkedList<>();
+        List<Integer> sortedOrder = new ArrayList<>();
+
+        for (int i = 0; i < n; i++) {
+            if (inDegree[i] == 0) {
+                queue.add(i);
+            }
+        }
+
+        while (!queue.isEmpty()) {
+            int current = queue.poll();
+            sortedOrder.add(current);
+
+            for (int neighbor : adjacencyList.get(current)) {
+                inDegree[neighbor]--;
+                if (inDegree[neighbor] == 0) {
+                    queue.add(neighbor);
+                }
+            }
+        }
+
+        if (sortedOrder.size() == n) {
+            return sortedOrder.toString();
+        } else {
+            return "Graph has a cycle";
+        }
+    }
+
 
 }
+
+
